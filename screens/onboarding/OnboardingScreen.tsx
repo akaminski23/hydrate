@@ -7,18 +7,15 @@ import {
   FlatList,
   Dimensions,
   Switch,
-  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useHydrateStore } from '@/store/useHydrateStore';
+import { useTheme } from '@/providers/ThemeContext';
 import Svg, { Path, Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-const ACCENT_COLOR = '#2196F3';
-const ACCENT_LIGHT = '#E3F2FD';
 
 interface OnboardingScreenProps {
   onComplete: () => void;
@@ -30,6 +27,7 @@ const GOAL_PRESETS = [2000, 2500, 3000, 3500];
 export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   const router = useRouter();
   const { setDailyGoal, setRemindersEnabled } = useHydrateStore();
+  const { theme, isDark } = useTheme();
 
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -62,7 +60,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           key={index}
           style={[
             styles.dot,
-            currentIndex === index && styles.dotActive,
+            { backgroundColor: theme.border },
+            currentIndex === index && { backgroundColor: theme.accent },
           ]}
         />
       ))}
@@ -77,18 +76,18 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
             <View style={styles.content}>
               {/* Water Drop Icon */}
               <View style={styles.iconContainer}>
-                <WaterDropIcon size={120} />
+                <WaterDropIcon size={120} theme={theme} />
               </View>
 
-              <Text style={styles.title}>Welcome to Hydrate</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: theme.text }]}>Welcome to Hydrate</Text>
+              <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
                 Track your daily water intake and stay healthy
               </Text>
             </View>
 
             <View style={styles.footer}>
               {renderDots()}
-              <TouchableOpacity style={styles.button} onPress={goToNext}>
+              <TouchableOpacity style={[styles.button, { backgroundColor: theme.accent }]} onPress={goToNext}>
                 <Text style={styles.buttonText}>Get Started</Text>
               </TouchableOpacity>
             </View>
@@ -99,8 +98,8 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
         return (
           <View style={styles.slide}>
             <View style={styles.content}>
-              <Text style={styles.title}>Set Your Daily Goal</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: theme.text }]}>Set Your Daily Goal</Text>
+              <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
                 How much water do you want to drink each day?
               </Text>
 
@@ -110,14 +109,16 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
                     key={goal}
                     style={[
                       styles.goalButton,
-                      selectedGoal === goal && styles.goalButtonSelected,
+                      { backgroundColor: theme.card, borderColor: 'transparent' },
+                      selectedGoal === goal && { borderColor: theme.accent, backgroundColor: theme.accent + '20' },
                     ]}
                     onPress={() => setSelectedGoal(goal)}
                   >
                     <Text
                       style={[
                         styles.goalButtonText,
-                        selectedGoal === goal && styles.goalButtonTextSelected,
+                        { color: theme.textSecondary },
+                        selectedGoal === goal && { color: theme.accent },
                       ]}
                     >
                       {goal} ml
@@ -129,7 +130,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
             <View style={styles.footer}>
               {renderDots()}
-              <TouchableOpacity style={styles.button} onPress={goToNext}>
+              <TouchableOpacity style={[styles.button, { backgroundColor: theme.accent }]} onPress={goToNext}>
                 <Text style={styles.buttonText}>Continue</Text>
               </TouchableOpacity>
             </View>
@@ -144,17 +145,17 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
                 <Text style={styles.bellIcon}>🔔</Text>
               </View>
 
-              <Text style={styles.title}>Stay Hydrated</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: theme.text }]}>Stay Hydrated</Text>
+              <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
                 Get gentle reminders throughout the day
               </Text>
 
-              <View style={styles.reminderToggle}>
-                <Text style={styles.reminderText}>Enable Reminders</Text>
+              <View style={[styles.reminderToggle, { backgroundColor: theme.card }]}>
+                <Text style={[styles.reminderText, { color: theme.text }]}>Enable Reminders</Text>
                 <Switch
                   value={remindersOn}
                   onValueChange={setRemindersOn}
-                  trackColor={{ false: '#E0E0E0', true: ACCENT_COLOR }}
+                  trackColor={{ false: theme.border, true: theme.accent }}
                   thumbColor="#FFFFFF"
                 />
               </View>
@@ -162,7 +163,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
             <View style={styles.footer}>
               {renderDots()}
-              <TouchableOpacity style={styles.button} onPress={handleComplete}>
+              <TouchableOpacity style={[styles.button, { backgroundColor: theme.accent }]} onPress={handleComplete}>
                 <Text style={styles.buttonText}>Start Tracking</Text>
               </TouchableOpacity>
             </View>
@@ -175,7 +176,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <FlatList
         ref={flatListRef}
         data={[0, 1, 2]}
@@ -195,7 +196,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 }
 
 // Water Drop Icon Component (matching the gauge)
-function WaterDropIcon({ size = 120 }: { size?: number }) {
+function WaterDropIcon({ size = 120, theme }: { size?: number; theme: any }) {
   const center = size / 2;
   const dropWidth = size * 0.7;
   const dropHeight = size * 0.85;
@@ -228,8 +229,8 @@ function WaterDropIcon({ size = 120 }: { size?: number }) {
     <Svg width={size} height={size}>
       <Defs>
         <LinearGradient id="dropGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <Stop offset="0%" stopColor="#56CCF2" />
-          <Stop offset="100%" stopColor="#2D9CDB" />
+          <Stop offset="0%" stopColor={theme.accentLight} />
+          <Stop offset="100%" stopColor={theme.gaugeProgress} />
         </LinearGradient>
       </Defs>
       <Path d={dropPath} fill="url(#dropGradient)" />
@@ -253,7 +254,6 @@ function WaterDropIcon({ size = 120 }: { size?: number }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   slide: {
     width: SCREEN_WIDTH,
@@ -281,13 +281,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#1A1A2E',
     textAlign: 'center',
     marginBottom: 12,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6B7280',
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 20,
@@ -303,16 +301,11 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#E0E0E0',
     marginHorizontal: 6,
-  },
-  dotActive: {
-    backgroundColor: ACCENT_COLOR,
   },
 
   // Button
   button: {
-    backgroundColor: ACCENT_COLOR,
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: 'center',
@@ -336,22 +329,12 @@ const styles = StyleSheet.create({
     width: (SCREEN_WIDTH - 48 - 16) / 2,
     paddingVertical: 20,
     borderRadius: 16,
-    backgroundColor: '#F5F5F5',
     borderWidth: 2,
-    borderColor: 'transparent',
     alignItems: 'center',
-  },
-  goalButtonSelected: {
-    borderColor: ACCENT_COLOR,
-    backgroundColor: ACCENT_LIGHT,
   },
   goalButtonText: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#6B7280',
-  },
-  goalButtonTextSelected: {
-    color: ACCENT_COLOR,
   },
 
   // Reminder Toggle
@@ -359,7 +342,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F5F5F5',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderRadius: 16,
@@ -369,6 +351,5 @@ const styles = StyleSheet.create({
   reminderText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#1A1A2E',
   },
 });

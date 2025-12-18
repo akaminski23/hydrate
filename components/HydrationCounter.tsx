@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeContext';
 import { fontSize, spacing } from '@/constants/spacing';
 import { CircularGauge } from './CircularGauge';
 import { useHydrateStore, ML_TO_OZ } from '@/store/useHydrateStore';
@@ -16,6 +16,7 @@ export function HydrationCounter({
   percentage,
   goal,
 }: HydrationCounterProps) {
+  const { theme } = useTheme();
   const { unit } = useHydrateStore();
   const animatedValue = useRef(new Animated.Value(0)).current;
 
@@ -57,13 +58,18 @@ export function HydrationCounter({
         {/* Counter overlay on gauge */}
         <View style={styles.counterOverlay}>
           <Text
-            style={[styles.amount, isGoalReached && styles.amountSuccess]}
+            style={[
+              styles.amount,
+              { color: isGoalReached ? theme.success : theme.text },
+            ]}
             numberOfLines={1}
             adjustsFontSizeToFit
           >
             {displayAmount}
           </Text>
-          <Text style={styles.goalText}>{goalDisplay}</Text>
+          <Text style={[styles.goalText, { color: theme.textSecondary }]}>
+            {goalDisplay}
+          </Text>
         </View>
       </View>
     </View>
@@ -88,15 +94,10 @@ const styles = StyleSheet.create({
   amount: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.text,
     letterSpacing: -1,
-  },
-  amountSuccess: {
-    color: colors.success,
   },
   goalText: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     marginTop: 2,
   },
 });

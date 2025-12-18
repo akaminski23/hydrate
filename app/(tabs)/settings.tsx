@@ -14,10 +14,9 @@ import {
   UIManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeContext';
 import { spacing, fontSize } from '@/constants/spacing';
 import { useHydrateStore, Unit, ML_TO_OZ, ReminderInterval } from '@/store/useHydrateStore';
 import { TimePicker } from '@/components/TimePicker';
@@ -45,7 +44,7 @@ const formatTimeDisplay = (timeString: string): string => {
 };
 
 export default function SettingsScreen() {
-  const router = useRouter();
+  const { theme, isDark, toggleTheme } = useTheme();
   const {
     dailyGoal,
     unit,
@@ -181,14 +180,12 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={styles.placeholder} />
+        <View style={styles.headerSpacer} />
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Settings</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
       {/* Settings Content */}
@@ -198,13 +195,45 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Theme Toggle */}
+        <View style={[styles.settingCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={[styles.settingLabel, { color: theme.text }]}>Appearance</Text>
+              <Text style={[styles.settingDescription, { color: theme.textSecondary }]}>
+                {isDark ? 'Dark mode' : 'Light mode'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.themeToggle, { backgroundColor: theme.background }]}
+              onPress={toggleTheme}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={isDark ? 'moon' : 'sunny'}
+                size={24}
+                color={theme.accent}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Daily Goal */}
-        <View style={styles.settingCard}>
-          <Text style={styles.settingLabel}>Daily Goal</Text>
-          <Text style={styles.settingDescription}>Set your daily hydration target (2000-4000 ml)</Text>
+        <View style={[styles.settingCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+          <Text style={[styles.settingLabel, { color: theme.text }]}>Daily Goal</Text>
+          <Text style={[styles.settingDescription, { color: theme.textSecondary }]}>
+            Set your daily hydration target (2000-4000 ml)
+          </Text>
           <View style={styles.goalInputRow}>
             <TextInput
-              style={styles.goalInput}
+              style={[
+                styles.goalInput,
+                {
+                  backgroundColor: theme.background,
+                  color: theme.text,
+                  borderColor: theme.border,
+                },
+              ]}
               value={goalInput}
               onChangeText={handleGoalChange}
               onBlur={handleGoalSubmit}
@@ -212,29 +241,34 @@ export default function SettingsScreen() {
               keyboardType="number-pad"
               returnKeyType="done"
               maxLength={4}
+              placeholderTextColor={theme.textSecondary}
             />
-            <Text style={styles.goalUnit}>ml</Text>
+            <Text style={[styles.goalUnit, { color: theme.textSecondary }]}>ml</Text>
           </View>
-          <Text style={styles.goalConverted}>
+          <Text style={[styles.goalConverted, { color: theme.accent }]}>
             = {formatGoalDisplay(parseInt(goalInput, 10) || dailyGoal)}
           </Text>
         </View>
 
         {/* Units */}
-        <View style={styles.settingCard}>
-          <Text style={styles.settingLabel}>Units</Text>
-          <Text style={styles.settingDescription}>Choose your preferred measurement unit</Text>
+        <View style={[styles.settingCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+          <Text style={[styles.settingLabel, { color: theme.text }]}>Units</Text>
+          <Text style={[styles.settingDescription, { color: theme.textSecondary }]}>
+            Choose your preferred measurement unit
+          </Text>
           <View style={styles.unitToggleContainer}>
             <TouchableOpacity
               style={[
                 styles.unitButton,
-                unit === 'ml' && styles.unitButtonActive,
+                { backgroundColor: theme.background, borderColor: theme.border },
+                unit === 'ml' && { backgroundColor: theme.accent, borderColor: theme.accent },
               ]}
               onPress={() => handleUnitToggle('ml')}
             >
               <Text
                 style={[
                   styles.unitButtonText,
+                  { color: theme.textSecondary },
                   unit === 'ml' && styles.unitButtonTextActive,
                 ]}
               >
@@ -244,13 +278,15 @@ export default function SettingsScreen() {
             <TouchableOpacity
               style={[
                 styles.unitButton,
-                unit === 'oz' && styles.unitButtonActive,
+                { backgroundColor: theme.background, borderColor: theme.border },
+                unit === 'oz' && { backgroundColor: theme.accent, borderColor: theme.accent },
               ]}
               onPress={() => handleUnitToggle('oz')}
             >
               <Text
                 style={[
                   styles.unitButtonText,
+                  { color: theme.textSecondary },
                   unit === 'oz' && styles.unitButtonTextActive,
                 ]}
               >
@@ -261,31 +297,33 @@ export default function SettingsScreen() {
         </View>
 
         {/* Reminders */}
-        <View style={styles.settingCard}>
+        <View style={[styles.settingCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Reminders</Text>
-              <Text style={styles.settingDescription}>Get notified to drink water</Text>
+              <Text style={[styles.settingLabel, { color: theme.text }]}>Reminders</Text>
+              <Text style={[styles.settingDescription, { color: theme.textSecondary }]}>
+                Get notified to drink water
+              </Text>
             </View>
             <Switch
               value={remindersEnabled}
               onValueChange={handleRemindersToggle}
-              trackColor={{ false: colors.border, true: colors.accent }}
+              trackColor={{ false: theme.border, true: theme.accent }}
               thumbColor="#FFFFFF"
             />
           </View>
 
           {/* Reminder Options (shown when enabled) */}
           {remindersEnabled && (
-            <View style={styles.reminderOptions}>
+            <View style={[styles.reminderOptions, { backgroundColor: theme.background }]}>
               {/* Start Time */}
               <View style={styles.timeRow}>
-                <Text style={styles.timeLabel}>Start Time</Text>
+                <Text style={[styles.timeLabel, { color: theme.text }]}>Start Time</Text>
                 <TouchableOpacity
-                  style={styles.timeButton}
+                  style={[styles.timeButton, { backgroundColor: theme.card, borderColor: theme.border }]}
                   onPress={() => setShowStartPicker(true)}
                 >
-                  <Text style={styles.timeButtonText}>
+                  <Text style={[styles.timeButtonText, { color: theme.accent }]}>
                     {formatTimeDisplay(reminderStartTime)}
                   </Text>
                 </TouchableOpacity>
@@ -293,12 +331,12 @@ export default function SettingsScreen() {
 
               {/* End Time */}
               <View style={styles.timeRow}>
-                <Text style={styles.timeLabel}>End Time</Text>
+                <Text style={[styles.timeLabel, { color: theme.text }]}>End Time</Text>
                 <TouchableOpacity
-                  style={styles.timeButton}
+                  style={[styles.timeButton, { backgroundColor: theme.card, borderColor: theme.border }]}
                   onPress={() => setShowEndPicker(true)}
                 >
-                  <Text style={styles.timeButtonText}>
+                  <Text style={[styles.timeButtonText, { color: theme.accent }]}>
                     {formatTimeDisplay(reminderEndTime)}
                   </Text>
                 </TouchableOpacity>
@@ -306,20 +344,25 @@ export default function SettingsScreen() {
 
               {/* Interval */}
               <View style={styles.intervalSection}>
-                <Text style={styles.timeLabel}>Remind every</Text>
+                <Text style={[styles.timeLabel, { color: theme.text }]}>Remind every</Text>
                 <View style={styles.intervalButtons}>
                   {INTERVAL_OPTIONS.map((interval) => (
                     <TouchableOpacity
                       key={interval}
                       style={[
                         styles.intervalButton,
-                        reminderInterval === interval && styles.intervalButtonActive,
+                        { backgroundColor: theme.card, borderColor: theme.border },
+                        reminderInterval === interval && {
+                          backgroundColor: theme.accent,
+                          borderColor: theme.accent,
+                        },
                       ]}
                       onPress={() => setReminderInterval(interval)}
                     >
                       <Text
                         style={[
                           styles.intervalButtonText,
+                          { color: theme.textSecondary },
                           reminderInterval === interval && styles.intervalButtonTextActive,
                         ]}
                       >
@@ -334,8 +377,11 @@ export default function SettingsScreen() {
         </View>
 
         {/* Reset Today */}
-        <TouchableOpacity style={styles.resetCard} onPress={handleResetToday}>
-          <Text style={styles.resetText}>Reset Today's Progress</Text>
+        <TouchableOpacity
+          style={[styles.resetCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}
+          onPress={handleResetToday}
+        >
+          <Text style={[styles.resetText, { color: theme.error }]}>Reset Today's Progress</Text>
         </TouchableOpacity>
 
         {/* Version (Easter egg: 5x tap to reset onboarding) */}
@@ -344,7 +390,7 @@ export default function SettingsScreen() {
           onPress={handleVersionTap}
           activeOpacity={1}
         >
-          <Text style={styles.versionText}>Version 1.0.0</Text>
+          <Text style={[styles.versionText, { color: theme.textSecondary }]}>Version 1.0.0</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -371,59 +417,13 @@ export default function SettingsScreen() {
         onCancel={() => setShowEndPicker(false)}
         title="End Time"
       />
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <NavItem iconName="home" label="Home" href="/" />
-        <NavItem iconName="time" label="History" href="/history" />
-        <NavItem iconName="settings" label="Settings" active />
-      </View>
     </SafeAreaView>
-  );
-}
-
-// Navigation Item Component
-function NavItem({
-  iconName,
-  label,
-  active = false,
-  href,
-}: {
-  iconName: 'home' | 'time' | 'settings';
-  label: string;
-  active?: boolean;
-  href?: string;
-}) {
-  const router = useRouter();
-
-  const handlePress = () => {
-    if (href) {
-      router.push(href as any);
-    }
-  };
-
-  const getIconName = (): keyof typeof Ionicons.glyphMap => {
-    return active ? iconName : `${iconName}-outline` as keyof typeof Ionicons.glyphMap;
-  };
-
-  return (
-    <TouchableOpacity style={styles.navItem} onPress={handlePress}>
-      <Ionicons
-        name={getIconName()}
-        size={24}
-        color={active ? colors.accent : colors.textSecondary}
-      />
-      <Text style={[styles.navLabel, active && styles.navLabelActive]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
 
   // Header
@@ -434,23 +434,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  backButton: {
+  headerSpacer: {
     width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backText: {
-    fontSize: 24,
-    color: colors.text,
   },
   headerTitle: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: colors.text,
-  },
-  placeholder: {
-    width: 40,
   },
 
   // ScrollView
@@ -465,10 +454,10 @@ const styles = StyleSheet.create({
 
   // Setting Card
   settingCard: {
-    backgroundColor: colors.card,
     borderRadius: 16,
     padding: spacing.lg,
     marginBottom: spacing.md,
+    borderWidth: 1,
   },
   settingRow: {
     flexDirection: 'row',
@@ -481,12 +470,19 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: colors.text,
     marginBottom: spacing.xs,
   },
   settingDescription: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
+  },
+
+  // Theme Toggle
+  themeToggle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   // Goal Input
@@ -498,25 +494,20 @@ const styles = StyleSheet.create({
   goalInput: {
     flex: 1,
     height: 52,
-    backgroundColor: colors.background,
     borderRadius: 12,
     paddingHorizontal: spacing.md,
     fontSize: fontSize.xl,
     fontWeight: '600',
-    color: colors.text,
     borderWidth: 2,
-    borderColor: colors.border,
   },
   goalUnit: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: colors.textSecondary,
     marginLeft: spacing.sm,
     width: 40,
   },
   goalConverted: {
     fontSize: fontSize.sm,
-    color: colors.accent,
     marginTop: spacing.sm,
   },
 
@@ -530,19 +521,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.md,
     borderRadius: 12,
-    backgroundColor: colors.background,
     borderWidth: 2,
-    borderColor: colors.border,
     alignItems: 'center',
-  },
-  unitButtonActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
   },
   unitButtonText: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: colors.textSecondary,
   },
   unitButtonTextActive: {
     color: '#FFFFFF',
@@ -551,7 +535,6 @@ const styles = StyleSheet.create({
   // Reminder Options
   reminderOptions: {
     marginTop: spacing.lg,
-    backgroundColor: colors.background,
     borderRadius: 12,
     padding: spacing.md,
   },
@@ -564,22 +547,18 @@ const styles = StyleSheet.create({
   timeLabel: {
     fontSize: fontSize.base,
     fontWeight: '500',
-    color: colors.text,
   },
   timeButton: {
-    backgroundColor: colors.card,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.border,
     minWidth: 100,
     alignItems: 'center',
   },
   timeButtonText: {
     fontSize: fontSize.base,
     fontWeight: '600',
-    color: colors.accent,
   },
 
   // Interval
@@ -595,19 +574,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.sm,
     borderRadius: 10,
-    backgroundColor: colors.card,
     borderWidth: 2,
-    borderColor: colors.border,
     alignItems: 'center',
-  },
-  intervalButtonActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
   },
   intervalButtonText: {
     fontSize: fontSize.base,
     fontWeight: '600',
-    color: colors.textSecondary,
   },
   intervalButtonTextActive: {
     color: '#FFFFFF',
@@ -615,16 +587,15 @@ const styles = StyleSheet.create({
 
   // Reset Card
   resetCard: {
-    backgroundColor: colors.card,
     borderRadius: 16,
     padding: spacing.lg,
     marginTop: spacing.md,
     alignItems: 'center',
+    borderWidth: 1,
   },
   resetText: {
     fontSize: fontSize.base,
     fontWeight: '600',
-    color: colors.error,
   },
 
   // Version text (Easter egg)
@@ -636,30 +607,5 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-
-  // Bottom Navigation
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    paddingVertical: spacing.sm,
-    paddingBottom: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.xs,
-    gap: 4,
-  },
-  navLabel: {
-    fontSize: 10,
-    color: colors.textSecondary,
-  },
-  navLabelActive: {
-    color: colors.accent,
-    fontWeight: '500',
   },
 });

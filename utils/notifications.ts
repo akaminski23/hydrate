@@ -105,13 +105,12 @@ export async function scheduleHydrationReminders(
 
   // Schedule notifications for each hour
   for (const hour of notificationHours) {
-    const message = getRandomMessage();
-
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: `💧 ${message.title}`,
-        body: message.body,
-        sound: 'default',
+        title: "Time to hydrate! 💧",
+        body: "Don't forget to drink water and stay healthy",
+        sound: true,
+        priority: Notifications.AndroidNotificationPriority.HIGH,
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -120,7 +119,7 @@ export async function scheduleHydrationReminders(
       },
     });
 
-    console.log(`Scheduled notification for ${hour}:00`);
+    console.log(`Scheduled notification for ${hour}:00 - Title: Time to hydrate!`);
   }
 
   console.log(`Scheduled ${notificationHours.length} daily notifications`);
@@ -131,4 +130,24 @@ export async function getScheduledNotifications() {
   const notifications = await Notifications.getAllScheduledNotificationsAsync();
   console.log('Scheduled notifications:', notifications);
   return notifications;
+}
+
+// Send test notification immediately (for debugging)
+export async function sendTestNotification(): Promise<void> {
+  const hasPermission = await requestNotificationPermissions();
+  if (!hasPermission) {
+    console.log('Cannot send test notification - no permission');
+    return;
+  }
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "Time to hydrate! 💧",
+      body: "Don't forget to drink water and stay healthy",
+      sound: true,
+    },
+    trigger: null, // null = send immediately
+  });
+
+  console.log('Test notification sent!');
 }

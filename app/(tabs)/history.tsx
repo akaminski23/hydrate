@@ -10,9 +10,8 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, drinkColors, DrinkType } from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeContext';
+import { drinkColors, DrinkType } from '@/constants/colors';
 import { spacing, fontSize } from '@/constants/spacing';
 import { useHydrateStore, Drink, ML_TO_OZ } from '@/store/useHydrateStore';
 
@@ -115,7 +114,7 @@ const filterDrinks = (drinks: Drink[], filter: FilterType): Drink[] => {
 };
 
 export default function HistoryScreen() {
-  const router = useRouter();
+  const { theme, isDark } = useTheme();
   const { drinks, unit, removeDrink } = useHydrateStore();
   const [filter, setFilter] = useState<FilterType>('today');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
@@ -138,31 +137,32 @@ export default function HistoryScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>History</Text>
+        <View style={styles.headerSpacer} />
+        <Text style={[styles.headerTitle, { color: theme.text }]}>History</Text>
 
         {/* Filter Dropdown */}
         <TouchableOpacity
-          style={styles.filterButton}
+          style={[styles.filterButton, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}
           onPress={() => setShowFilterDropdown(!showFilterDropdown)}
         >
-          <Text style={styles.filterText}>{filterLabels[filter]}</Text>
-          <Text style={styles.filterArrow}>▼</Text>
+          <Text style={[styles.filterText, { color: theme.text }]}>{filterLabels[filter]}</Text>
+          <Text style={[styles.filterArrow, { color: theme.textSecondary }]}>▼</Text>
         </TouchableOpacity>
       </View>
 
       {/* Filter Dropdown Menu */}
       {showFilterDropdown && (
-        <View style={styles.dropdownMenu}>
+        <View style={[styles.dropdownMenu, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
           {(['today', 'week', 'month'] as FilterType[]).map((f) => (
             <TouchableOpacity
               key={f}
-              style={[styles.dropdownItem, filter === f && styles.dropdownItemActive]}
+              style={[
+                styles.dropdownItem,
+                filter === f && { backgroundColor: theme.accent + '20' },
+              ]}
               onPress={() => {
                 setFilter(f);
                 setShowFilterDropdown(false);
@@ -171,7 +171,8 @@ export default function HistoryScreen() {
               <Text
                 style={[
                   styles.dropdownItemText,
-                  filter === f && styles.dropdownItemTextActive,
+                  { color: theme.text },
+                  filter === f && { color: theme.accent, fontWeight: '600' },
                 ]}
               >
                 {filterLabels[f]}
@@ -186,16 +187,22 @@ export default function HistoryScreen() {
         {groupedDrinks.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>📋</Text>
-            <Text style={styles.emptyText}>No drinks recorded yet</Text>
-            <Text style={styles.emptySubtext}>Start tracking on Home screen</Text>
+            <Text style={[styles.emptyText, { color: theme.text }]}>No drinks recorded yet</Text>
+            <Text style={[styles.emptySubtext, { color: theme.textSecondary }]}>
+              Start tracking on Home screen
+            </Text>
           </View>
         ) : (
           groupedDrinks.map((group) => (
             <View key={group.date} style={styles.dayGroup}>
               {/* Day Header */}
               <View style={styles.dayHeader}>
-                <Text style={styles.dayTitle}>{formatDateHeader(group.date)}</Text>
-                <Text style={styles.dayTotal}>Total: {formatAmount(group.total)}</Text>
+                <Text style={[styles.dayTitle, { color: theme.text }]}>
+                  {formatDateHeader(group.date)}
+                </Text>
+                <Text style={[styles.dayTotal, { color: theme.accent }]}>
+                  Total: {formatAmount(group.total)}
+                </Text>
               </View>
 
               {/* Drinks */}
@@ -205,6 +212,7 @@ export default function HistoryScreen() {
                   drink={drink}
                   formatAmount={formatAmount}
                   onDelete={() => removeDrink(drink.id)}
+                  theme={theme}
                 />
               ))}
             </View>
@@ -214,13 +222,6 @@ export default function HistoryScreen() {
         {/* Bottom spacing */}
         <View style={{ height: spacing.xl }} />
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <NavItem iconName="home" label="Home" href="/" />
-        <NavItem iconName="time" label="History" active />
-        <NavItem iconName="settings" label="Settings" href="/settings" />
-      </View>
     </SafeAreaView>
   );
 }
@@ -230,10 +231,12 @@ function SwipeableHistoryItem({
   drink,
   formatAmount,
   onDelete,
+  theme,
 }: {
   drink: Drink;
   formatAmount: (ml: number) => string;
   onDelete: () => void;
+  theme: any;
 }) {
   const drinkInfo = getDrinkInfo(drink.type);
   const translateX = useRef(new Animated.Value(0)).current;
@@ -268,13 +271,13 @@ function SwipeableHistoryItem({
   return (
     <View style={styles.swipeContainer}>
       {/* Delete Background */}
-      <View style={styles.deleteBackground}>
+      <View style={[styles.deleteBackground, { backgroundColor: theme.error }]}>
         <Text style={styles.deleteText}>Delete</Text>
       </View>
 
       {/* Swipeable Item */}
       <Animated.View
-        style={[styles.historyItem, { transform: [{ translateX }] }]}
+        style={[styles.historyItem, { backgroundColor: theme.cardAlt, borderColor: theme.cardBorder, transform: [{ translateX }] }]}
         {...panResponder.panHandlers}
       >
         <View
@@ -286,58 +289,21 @@ function SwipeableHistoryItem({
           <Text style={styles.historyIconText}>{drinkInfo.icon}</Text>
         </View>
         <View style={styles.historyInfo}>
-          <Text style={styles.historyDrinkName}>
+          <Text style={[styles.historyDrinkName, { color: theme.text }]}>
             {drinkInfo.label} • {formatTime(drink.timestamp)}
           </Text>
         </View>
-        <Text style={styles.historyAmount}>{formatAmount(drink.amount)}</Text>
+        <Text style={[styles.historyAmount, { color: theme.text }]}>
+          {formatAmount(drink.amount)}
+        </Text>
       </Animated.View>
     </View>
-  );
-}
-
-// Navigation Item Component
-function NavItem({
-  iconName,
-  label,
-  active = false,
-  href,
-}: {
-  iconName: 'home' | 'time' | 'settings';
-  label: string;
-  active?: boolean;
-  href?: string;
-}) {
-  const router = useRouter();
-
-  const handlePress = () => {
-    if (href) {
-      router.push(href as any);
-    }
-  };
-
-  const getIconName = (): keyof typeof Ionicons.glyphMap => {
-    return active ? iconName : `${iconName}-outline` as keyof typeof Ionicons.glyphMap;
-  };
-
-  return (
-    <TouchableOpacity style={styles.navItem} onPress={handlePress}>
-      <Ionicons
-        name={getIconName()}
-        size={24}
-        color={active ? colors.accent : colors.textSecondary}
-      />
-      <Text style={[styles.navLabel, active && styles.navLabelActive]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
 
   // Header
@@ -348,40 +314,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
-  backButton: {
+  headerSpacer: {
     width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backText: {
-    fontSize: 24,
-    color: colors.text,
   },
   headerTitle: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: colors.text,
   },
 
   // Filter
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: 12,
+    borderWidth: 1,
     gap: spacing.xs,
   },
   filterText: {
     fontSize: fontSize.sm,
     fontWeight: '500',
-    color: colors.text,
   },
   filterArrow: {
     fontSize: 10,
-    color: colors.textSecondary,
   },
 
   // Dropdown
@@ -389,8 +345,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 100,
     right: spacing.lg,
-    backgroundColor: colors.card,
     borderRadius: 12,
+    borderWidth: 1,
     padding: spacing.xs,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -404,16 +360,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: 8,
   },
-  dropdownItemActive: {
-    backgroundColor: colors.accent + '20',
-  },
   dropdownItemText: {
     fontSize: fontSize.base,
-    color: colors.text,
-  },
-  dropdownItemTextActive: {
-    color: colors.accent,
-    fontWeight: '600',
   },
 
   // Scroll View
@@ -434,11 +382,9 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: colors.text,
   },
   emptySubtext: {
     fontSize: fontSize.base,
-    color: colors.textSecondary,
     marginTop: spacing.xs,
   },
 
@@ -456,11 +402,9 @@ const styles = StyleSheet.create({
   dayTitle: {
     fontSize: fontSize.lg,
     fontWeight: '700',
-    color: colors.text,
   },
   dayTotal: {
     fontSize: fontSize.sm,
-    color: colors.accent,
     fontWeight: '600',
   },
 
@@ -476,7 +420,6 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 100,
-    backgroundColor: colors.error,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'flex-end',
@@ -492,8 +435,8 @@ const styles = StyleSheet.create({
   historyItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
     borderRadius: 16,
+    borderWidth: 1,
     padding: spacing.md,
   },
   historyIcon: {
@@ -513,35 +456,9 @@ const styles = StyleSheet.create({
   historyDrinkName: {
     fontSize: fontSize.base,
     fontWeight: '500',
-    color: colors.text,
   },
   historyAmount: {
     fontSize: fontSize.base,
     fontWeight: '600',
-    color: colors.text,
-  },
-
-  // Bottom Navigation
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    paddingVertical: spacing.sm,
-    paddingBottom: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.xs,
-    gap: 4,
-  },
-  navLabel: {
-    fontSize: 10,
-    color: colors.textSecondary,
-  },
-  navLabelActive: {
-    color: colors.accent,
-    fontWeight: '500',
   },
 });

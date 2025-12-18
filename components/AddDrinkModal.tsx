@@ -9,7 +9,8 @@ import {
   TextInput,
   Keyboard,
 } from 'react-native';
-import { colors, DrinkType } from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeContext';
+import { DrinkType } from '@/constants/colors';
 import { spacing, fontSize } from '@/constants/spacing';
 import { useHydrateStore, Unit, ML_TO_OZ, OZ_TO_ML } from '@/store/useHydrateStore';
 
@@ -34,6 +35,7 @@ export function AddDrinkModal({
   onAdd,
   onClose,
 }: AddDrinkModalProps) {
+  const { theme } = useTheme();
   const { unit, setUnit } = useHydrateStore();
   const [selectedAmount, setSelectedAmount] = useState(250);
   const [customInput, setCustomInput] = useState('');
@@ -155,10 +157,13 @@ export function AddDrinkModal({
       onRequestClose={handleClose}
     >
       <Pressable style={styles.overlay} onPress={handleClose}>
-        <Pressable style={styles.modalContainer} onPress={Keyboard.dismiss}>
+        <Pressable
+          style={[styles.modalContainer, { backgroundColor: theme.card }]}
+          onPress={Keyboard.dismiss}
+        >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>
+            <Text style={[styles.title, { color: theme.text }]}>
               Add {drinkLabel} {drinkIcon}
             </Text>
           </View>
@@ -168,13 +173,15 @@ export function AddDrinkModal({
             <TouchableOpacity
               style={[
                 styles.unitButton,
-                localUnit === 'ml' && { backgroundColor: drinkColor },
+                { backgroundColor: theme.background, borderColor: theme.border },
+                localUnit === 'ml' && { backgroundColor: drinkColor, borderColor: drinkColor },
               ]}
               onPress={() => handleUnitToggle('ml')}
             >
               <Text
                 style={[
                   styles.unitButtonText,
+                  { color: theme.textSecondary },
                   localUnit === 'ml' && styles.unitButtonTextActive,
                 ]}
               >
@@ -184,13 +191,15 @@ export function AddDrinkModal({
             <TouchableOpacity
               style={[
                 styles.unitButton,
-                localUnit === 'oz' && { backgroundColor: drinkColor },
+                { backgroundColor: theme.background, borderColor: theme.border },
+                localUnit === 'oz' && { backgroundColor: drinkColor, borderColor: drinkColor },
               ]}
               onPress={() => handleUnitToggle('oz')}
             >
               <Text
                 style={[
                   styles.unitButtonText,
+                  { color: theme.textSecondary },
                   localUnit === 'oz' && styles.unitButtonTextActive,
                 ]}
               >
@@ -206,6 +215,7 @@ export function AddDrinkModal({
                 key={index}
                 style={[
                   styles.quickButton,
+                  { borderColor: theme.border, backgroundColor: theme.background },
                   isQuickAmountSelected(amount) && {
                     backgroundColor: drinkColor,
                     borderColor: drinkColor,
@@ -216,6 +226,7 @@ export function AddDrinkModal({
                 <Text
                   style={[
                     styles.quickButtonText,
+                    { color: theme.textSecondary },
                     isQuickAmountSelected(amount) && styles.quickButtonTextSelected,
                   ]}
                 >
@@ -227,22 +238,30 @@ export function AddDrinkModal({
 
           {/* Custom Input */}
           <View style={styles.customInputContainer}>
-            <Text style={styles.customLabel}>Custom amount:</Text>
+            <Text style={[styles.customLabel, { color: theme.textSecondary }]}>
+              Custom amount:
+            </Text>
             <View style={styles.inputRow}>
               <TextInput
                 style={[
                   styles.customInput,
-                  isCustom && { borderColor: drinkColor },
+                  {
+                    borderColor: isCustom ? drinkColor : theme.border,
+                    color: theme.text,
+                    backgroundColor: theme.background,
+                  },
                 ]}
                 value={customInput}
                 onChangeText={handleCustomInputChange}
                 placeholder={`Enter ${localUnit}`}
-                placeholderTextColor={colors.textSecondary}
+                placeholderTextColor={theme.textSecondary}
                 keyboardType="decimal-pad"
                 returnKeyType="done"
                 onSubmitEditing={Keyboard.dismiss}
               />
-              <Text style={styles.inputUnit}>{localUnit}</Text>
+              <Text style={[styles.inputUnit, { color: theme.textSecondary }]}>
+                {localUnit}
+              </Text>
             </View>
           </View>
 
@@ -252,7 +271,7 @@ export function AddDrinkModal({
               {getDisplayAmount(selectedAmount)} {localUnit}
             </Text>
             {localUnit === 'oz' && (
-              <Text style={styles.amountSubtext}>
+              <Text style={[styles.amountSubtext, { color: theme.textSecondary }]}>
                 ({selectedAmount} ml)
               </Text>
             )}
@@ -261,10 +280,12 @@ export function AddDrinkModal({
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
             <TouchableOpacity
-              style={styles.cancelButton}
+              style={[styles.cancelButton, { borderColor: theme.border }]}
               onPress={handleClose}
             >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
+              <Text style={[styles.cancelButtonText, { color: theme.textSecondary }]}>
+                Cancel
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -289,7 +310,6 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: '85%',
-    backgroundColor: colors.card,
     borderRadius: 20,
     padding: spacing.lg,
   },
@@ -300,7 +320,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSize.xl,
     fontWeight: '700',
-    color: colors.text,
   },
 
   // Unit Toggle
@@ -314,14 +333,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     borderRadius: 20,
-    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   unitButtonText: {
     fontSize: fontSize.base,
     fontWeight: '600',
-    color: colors.textSecondary,
   },
   unitButtonTextActive: {
     color: '#FFFFFF',
@@ -340,15 +356,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
     minWidth: 75,
     alignItems: 'center',
   },
   quickButtonText: {
     fontSize: fontSize.sm,
     fontWeight: '600',
-    color: colors.textSecondary,
   },
   quickButtonTextSelected: {
     color: '#FFFFFF',
@@ -360,7 +373,6 @@ const styles = StyleSheet.create({
   },
   customLabel: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
   inputRow: {
@@ -372,17 +384,13 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderWidth: 2,
-    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: spacing.md,
     fontSize: fontSize.lg,
-    color: colors.text,
-    backgroundColor: colors.background,
   },
   inputUnit: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: colors.textSecondary,
     width: 30,
   },
 
@@ -398,7 +406,6 @@ const styles = StyleSheet.create({
   },
   amountSubtext: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
     marginTop: spacing.xs,
   },
 
@@ -412,13 +419,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.border,
     alignItems: 'center',
   },
   cancelButtonText: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: colors.textSecondary,
   },
   addButton: {
     flex: 1,

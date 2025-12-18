@@ -10,6 +10,7 @@ import Svg, {
   G,
   Circle,
 } from 'react-native-svg';
+import { useTheme } from '@/providers/ThemeContext';
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
@@ -24,6 +25,7 @@ export function CircularGauge({
   size = 260,
   strokeWidth = 22,
 }: CircularGaugeProps) {
+  const { theme } = useTheme();
   const fillAnim = useRef(new Animated.Value(100)).current;
   const arcAnim = useRef(new Animated.Value(0)).current;
   const [animatedPercentage, setAnimatedPercentage] = useState(0);
@@ -117,7 +119,7 @@ export function CircularGauge({
         <Path
           key={i}
           d={`M ${outer.x} ${outer.y} L ${inner.x} ${inner.y}`}
-          stroke="#D1D5DB"
+          stroke={theme.gaugeTicks}
           strokeWidth={isMajor ? 2 : 1.5}
           strokeLinecap="round"
         />
@@ -170,18 +172,18 @@ export function CircularGauge({
       <Svg width={size} height={size}>
         <Defs>
           <LinearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <Stop offset="0%" stopColor="#56CCF2" />
-            <Stop offset="100%" stopColor="#2D9CDB" />
+            <Stop offset="0%" stopColor={theme.accentLight} />
+            <Stop offset="100%" stopColor={theme.gaugeProgress} />
           </LinearGradient>
 
           <LinearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <Stop offset="0%" stopColor="#56CCF2" />
-            <Stop offset="100%" stopColor="#2D9CDB" />
+            <Stop offset="0%" stopColor={theme.accentLight} />
+            <Stop offset="100%" stopColor={theme.gaugeProgress} />
           </LinearGradient>
 
           <LinearGradient id="dropStrokeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="#56CCF2" />
-            <Stop offset="100%" stopColor="#2D9CDB" />
+            <Stop offset="0%" stopColor={theme.accentLight} />
+            <Stop offset="100%" stopColor={theme.gaugeProgress} />
           </LinearGradient>
 
           <ClipPath id="dropClip">
@@ -195,7 +197,7 @@ export function CircularGauge({
         {/* Background arc (gray horseshoe) */}
         <Path
           d={bgArcPath}
-          stroke="#E5E7EB"
+          stroke={theme.gaugeTrack}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"
@@ -216,8 +218,8 @@ export function CircularGauge({
         {isEmpty ? (
           <Path
             d={dropPath}
-            fill="#E8EAED"
-            stroke="#D1D5DB"
+            fill={theme.gaugeTrack}
+            stroke={theme.gaugeTicks}
             strokeWidth={2}
           />
         ) : (

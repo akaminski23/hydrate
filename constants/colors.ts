@@ -1,20 +1,64 @@
 // Water Theme - Hydrate App 💧
-// Light Mode (from Figma design)
-export const colors = {
-  background: '#F5F5F5',      // light gray background
-  card: '#FFFFFF',            // white cards
-  accent: '#2D9CDB',          // water blue from Figma
-  accentLight: '#56CCF2',     // lighter blue for gradient
-  text: '#1A1A2E',            // dark text
-  textSecondary: '#828282',   // gray secondary text
-  success: '#27AE60',         // green for goal reached
-  border: '#E0E0E0',          // light border
+
+export const lightTheme = {
+  background: '#F5F5F5',
+  card: '#FFFFFF',
+  cardDark: '#FFFFFF',
+  cardAlt: '#FFFFFF',
+  cardBorder: 'transparent',
+  accent: '#2D9CDB',
+  accentLight: '#56CCF2',
+  text: '#1A1A2E',
+  textSecondary: '#828282',
+  success: '#27AE60',
+  border: '#E0E0E0',
   error: '#EB5757',
-  // Gauge specific colors
-  gaugeTrack: '#E8F4FD',      // light blue track background
-  gaugeProgress: '#2D9CDB',   // blue progress
-  gaugeTicks: '#BDBDBD',      // gray tick marks
+  gaugeTrack: '#E8F4FD',
+  gaugeProgress: '#2D9CDB',
+  gaugeTicks: '#BDBDBD',
+  premium: '#FFD700',        // złoty dla Pro button
 } as const;
+
+export const darkTheme = {
+  background: '#0F1624',        // deep navy
+  card: '#1A2332',              // lighter navy (settings cards)
+  cardDark: '#101823',          // ciemniejsze tło gauge (bliżej background)
+  cardAlt: '#1A2332',           // jaśniejsze (history items)
+  cardBorder: 'rgba(74, 144, 217, 0.2)', // subtle blue border
+  accent: '#4A90D9',            // główny niebieski (gauge arc)
+  accentLight: '#6BA3E0',       // jaśniejszy akcent
+  text: '#FFFFFF',
+  textSecondary: '#8E9BB3',     // szaro-niebieski
+  success: '#4CD964',
+  border: '#2A3444',            // navy border
+  error: '#FF453A',
+  gaugeTrack: '#1E2A3D',        // ciemniejszy navy dla gauge track
+  gaugeProgress: '#4A90D9',     // ten sam niebieski co accent
+  gaugeTicks: '#3A4A5E',        // navy-gray dla ticków
+  premium: '#FFD700',           // złoty dla Pro button
+} as const;
+
+export type ThemeColors = {
+  background: string;
+  card: string;
+  cardDark: string;
+  cardAlt: string;
+  cardBorder: string;
+  accent: string;
+  accentLight: string;
+  text: string;
+  textSecondary: string;
+  success: string;
+  border: string;
+  error: string;
+  gaugeTrack: string;
+  gaugeProgress: string;
+  gaugeTicks: string;
+  premium: string;
+};
+
+// Default export for backward compatibility (will be replaced by context)
+export const colors = lightTheme;
 
 // Kolory napojów dla sylwetki
 export const drinkColors = {

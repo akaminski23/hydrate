@@ -10,7 +10,7 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { colors } from '@/constants/colors';
+import { useTheme } from '@/providers/ThemeContext';
 import { spacing, fontSize } from '@/constants/spacing';
 
 const ITEM_HEIGHT = 50;
@@ -58,6 +58,7 @@ const convert12hTo24h = (hour: number, minute: number, period: 'AM' | 'PM'): str
 };
 
 export function TimePicker({ visible, value, onConfirm, onCancel, title = 'Select Time' }: TimePickerProps) {
+  const { theme } = useTheme();
   const parsed = parse24hTo12h(value);
 
   const [selectedHour, setSelectedHour] = useState(parsed.hour);
@@ -105,22 +106,25 @@ export function TimePicker({ visible, value, onConfirm, onCancel, title = 'Selec
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.card }]}>
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, { borderBottomColor: theme.border }]}>
             <TouchableOpacity onPress={onCancel} style={styles.headerButton}>
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={[styles.cancelText, { color: theme.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
-            <Text style={styles.title}>{title}</Text>
+            <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
             <TouchableOpacity onPress={handleConfirm} style={styles.headerButton}>
-              <Text style={styles.doneText}>Done</Text>
+              <Text style={[styles.doneText, { color: theme.accent }]}>Done</Text>
             </TouchableOpacity>
           </View>
 
           {/* Picker Wheels */}
           <View style={styles.pickerContainer}>
             {/* Selection Highlight */}
-            <View style={styles.selectionHighlight} pointerEvents="none" />
+            <View
+              style={[styles.selectionHighlight, { backgroundColor: theme.accent + '15' }]}
+              pointerEvents="none"
+            />
 
             {/* Hour Wheel */}
             <View style={styles.wheelContainer}>
@@ -131,11 +135,12 @@ export function TimePicker({ visible, value, onConfirm, onCancel, title = 'Selec
                 onScroll={handleHourScroll}
                 formatValue={(v) => v.toString()}
                 initialIndex={HOURS_12.indexOf(selectedHour)}
+                theme={theme}
               />
             </View>
 
             {/* Separator */}
-            <Text style={styles.separator}>:</Text>
+            <Text style={[styles.separator, { color: theme.text }]}>:</Text>
 
             {/* Minute Wheel */}
             <View style={styles.wheelContainer}>
@@ -146,6 +151,7 @@ export function TimePicker({ visible, value, onConfirm, onCancel, title = 'Selec
                 onScroll={handleMinuteScroll}
                 formatValue={(v) => v.toString().padStart(2, '0')}
                 initialIndex={MINUTES.indexOf(selectedMinute)}
+                theme={theme}
               />
             </View>
 
@@ -158,6 +164,7 @@ export function TimePicker({ visible, value, onConfirm, onCancel, title = 'Selec
                 onScroll={handlePeriodScroll}
                 formatValue={(v) => String(v)}
                 initialIndex={PERIODS.indexOf(selectedPeriod)}
+                theme={theme}
               />
             </View>
           </View>
@@ -174,9 +181,10 @@ interface WheelPickerProps {
   onScroll: (index: number) => void;
   formatValue: (value: number | string) => string;
   initialIndex: number;
+  theme: any;
 }
 
-const WheelPicker = ({ data, selectedValue, onScroll, formatValue, initialIndex }: WheelPickerProps) => {
+const WheelPicker = ({ data, selectedValue, onScroll, formatValue, initialIndex, theme }: WheelPickerProps) => {
   const flatListRef = useRef<FlatList>(null);
   const lastIndexRef = useRef<number>(initialIndex);
 
@@ -221,7 +229,6 @@ const WheelPicker = ({ data, selectedValue, onScroll, formatValue, initialIndex 
   };
 
   const renderItem = ({ item, index }: { item: number | string; index: number }) => {
-    const actualIndex = index - 2;
     const isSelected = item === selectedValue;
     const isEmpty = item === '';
 
@@ -234,7 +241,8 @@ const WheelPicker = ({ data, selectedValue, onScroll, formatValue, initialIndex 
         <Text
           style={[
             styles.wheelItemText,
-            isSelected && styles.wheelItemTextSelected,
+            { color: theme.textSecondary },
+            isSelected && [styles.wheelItemTextSelected, { color: theme.accent }],
             isEmpty && styles.wheelItemTextEmpty,
           ]}
         >
@@ -274,7 +282,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 40,
@@ -288,7 +295,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   headerButton: {
     padding: spacing.sm,
@@ -296,16 +302,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: colors.text,
   },
   cancelText: {
     fontSize: fontSize.base,
-    color: colors.textSecondary,
   },
   doneText: {
     fontSize: fontSize.base,
     fontWeight: '600',
-    color: colors.accent,
   },
 
   // Picker Container
@@ -322,7 +325,6 @@ const styles = StyleSheet.create({
     right: spacing.lg,
     top: ITEM_HEIGHT * 2,
     height: ITEM_HEIGHT,
-    backgroundColor: colors.accent + '15',
     borderRadius: 12,
   },
   wheelContainer: {
@@ -337,7 +339,6 @@ const styles = StyleSheet.create({
   separator: {
     fontSize: 28,
     fontWeight: '600',
-    color: colors.text,
     marginHorizontal: spacing.xs,
   },
 
@@ -355,12 +356,10 @@ const styles = StyleSheet.create({
   },
   wheelItemText: {
     fontSize: 20,
-    color: colors.textSecondary,
   },
   wheelItemTextSelected: {
     fontSize: 26,
     fontWeight: '700',
-    color: colors.accent,
   },
   wheelItemTextEmpty: {
     color: 'transparent',

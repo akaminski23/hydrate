@@ -7,9 +7,11 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, drinkColors, DrinkType } from '@/constants/colors';
+import { useRouter } from 'expo-router';
+import { useTheme } from '@/providers/ThemeContext';
+import { useRevenueCat } from '@/providers/RevenueCatProvider';
+import { drinkColors, DrinkType } from '@/constants/colors';
 import { spacing, fontSize } from '@/constants/spacing';
 import { useHydrateStore, Drink, ML_TO_OZ } from '@/store/useHydrateStore';
 import { HydrationCounter } from '@/components/HydrationCounter';
@@ -39,6 +41,9 @@ const getDrinkInfo = (type: DrinkType) => {
 };
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { theme, isDark, toggleTheme } = useTheme();
+  const { isPro } = useRevenueCat();
   const { dailyGoal, addDrink, getTotalMl, getPercentage, getTodayDrinks, reset, unit } =
     useHydrateStore();
 
@@ -92,7 +97,7 @@ export default function HomeScreen() {
   const recentDrinks = [...todayDrinks].reverse().slice(0, 3);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -103,14 +108,28 @@ export default function HomeScreen() {
           <View style={styles.headerIcon}>
             <Text style={styles.headerIconText}>💧</Text>
           </View>
-          <Text style={styles.headerTitle}>Home</Text>
-          <TouchableOpacity style={styles.menuButton}>
-            <Text style={styles.menuDots}>⋮</Text>
-          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Home</Text>
+          <View style={styles.headerActions}>
+            {!isPro && (
+              <TouchableOpacity
+                style={styles.proButton}
+                onPress={() => router.push('/paywall')}
+              >
+                <Ionicons name="diamond" size={20} color={theme.premium} />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.themeToggleButton} onPress={toggleTheme}>
+              <Ionicons
+                name={isDark ? 'moon' : 'sunny'}
+                size={22}
+                color={theme.accent}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Gauge Card */}
-        <View style={styles.gaugeCard}>
+        <View style={[styles.gaugeCard, { backgroundColor: theme.cardDark, borderColor: theme.cardBorder }]}>
           <HydrationCounter
             totalMl={totalMl}
             percentage={percentage}
@@ -120,15 +139,15 @@ export default function HomeScreen() {
           {/* Action Buttons */}
           <View style={styles.actionRow}>
             <TouchableOpacity
-              style={styles.resetIconButton}
+              style={[styles.resetIconButton, { backgroundColor: 'transparent', borderColor: theme.accent, borderWidth: 2 }]}
               onPress={reset}
               activeOpacity={0.8}
             >
-              <Text style={styles.resetIconText}>↺</Text>
+              <Text style={[styles.resetIconText, { color: theme.accent }]}>↺</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.drinkButton}
+              style={[styles.drinkButton, { backgroundColor: theme.accent }]}
               onPress={handleQuickAdd}
               activeOpacity={0.8}
             >
@@ -136,7 +155,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.glassButton}
+              style={[styles.glassButton, { backgroundColor: 'transparent', borderColor: theme.accent, borderWidth: 2 }]}
               onPress={() => handleSelectDrink('water')}
               activeOpacity={0.8}
             >
@@ -148,31 +167,26 @@ export default function HomeScreen() {
         {/* History Section */}
         <View style={styles.historySection}>
           <View style={styles.historyHeader}>
-            <Text style={styles.historyTitle}>History</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAllText}>View All →</Text>
+            <Text style={[styles.historyTitle, { color: theme.text }]}>History</Text>
+            <TouchableOpacity onPress={() => router.push('/history')}>
+              <Text style={[styles.viewAllText, { color: theme.accent }]}>View All →</Text>
             </TouchableOpacity>
           </View>
 
           {recentDrinks.length === 0 ? (
             <View style={styles.emptyHistory}>
-              <Text style={styles.emptyText}>No drinks yet today</Text>
+              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+                No drinks yet today
+              </Text>
             </View>
           ) : (
             recentDrinks.map((drink) => (
-              <HistoryItem key={drink.id} drink={drink} />
+              <HistoryItem key={drink.id} drink={drink} theme={theme} />
             ))
           )}
         </View>
 
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <NavItem iconName="home" label="Home" active />
-        <NavItem iconName="time" label="History" href="/history" />
-        <NavItem iconName="settings" label="Settings" href="/settings" />
-      </View>
 
       {/* Add Drink Modal */}
       <AddDrinkModal
@@ -180,7 +194,7 @@ export default function HomeScreen() {
         drinkType={selectedDrink?.type || null}
         drinkIcon={selectedDrink?.icon || ''}
         drinkLabel={selectedDrink?.label || ''}
-        drinkColor={selectedDrink?.color || colors.accent}
+        drinkColor={selectedDrink?.color || theme.accent}
         onAdd={handleAddDrink}
         onClose={handleCloseModal}
       />
@@ -189,7 +203,7 @@ export default function HomeScreen() {
 }
 
 // History Item Component
-function HistoryItem({ drink }: { drink: Drink }) {
+function HistoryItem({ drink, theme }: { drink: Drink; theme: any }) {
   const drinkInfo = getDrinkInfo(drink.type);
   const { unit } = useHydrateStore();
 
@@ -199,7 +213,7 @@ function HistoryItem({ drink }: { drink: Drink }) {
     : `${drink.amount} ml`;
 
   return (
-    <View style={styles.historyItem}>
+    <View style={[styles.historyItem, { backgroundColor: theme.cardAlt, borderColor: theme.cardBorder }]}>
       <View
         style={[
           styles.historyIcon,
@@ -209,59 +223,22 @@ function HistoryItem({ drink }: { drink: Drink }) {
         <Text style={styles.historyIconText}>{drinkInfo.icon}</Text>
       </View>
       <View style={styles.historyInfo}>
-        <Text style={styles.historyDrinkName}>{drinkInfo.label}</Text>
-        <Text style={styles.historyTime}>{formatTime(drink.timestamp)}</Text>
+        <Text style={[styles.historyDrinkName, { color: theme.text }]}>{drinkInfo.label}</Text>
+        <Text style={[styles.historyTime, { color: theme.textSecondary }]}>
+          {formatTime(drink.timestamp)}
+        </Text>
       </View>
-      <Text style={styles.historyAmount}>{displayAmount}</Text>
+      <Text style={[styles.historyAmount, { color: theme.text }]}>{displayAmount}</Text>
       <TouchableOpacity style={styles.historyMenu}>
-        <Text style={styles.historyMenuDots}>⋮</Text>
+        <Text style={[styles.historyMenuDots, { color: theme.textSecondary }]}>⋮</Text>
       </TouchableOpacity>
     </View>
-  );
-}
-
-// Navigation Item Component
-function NavItem({
-  iconName,
-  label,
-  active = false,
-  href,
-}: {
-  iconName: 'home' | 'time' | 'settings';
-  label: string;
-  active?: boolean;
-  href?: string;
-}) {
-  const router = useRouter();
-
-  const handlePress = () => {
-    if (href) {
-      router.push(href as any);
-    }
-  };
-
-  const getIconName = (): keyof typeof Ionicons.glyphMap => {
-    return active ? iconName : `${iconName}-outline` as keyof typeof Ionicons.glyphMap;
-  };
-
-  return (
-    <TouchableOpacity style={styles.navItem} onPress={handlePress}>
-      <Ionicons
-        name={getIconName()}
-        size={24}
-        color={active ? colors.accent : colors.textSecondary}
-      />
-      <Text style={[styles.navLabel, active && styles.navLabelActive]}>
-        {label}
-      </Text>
-    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -290,26 +267,32 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: colors.text,
   },
-  menuButton: {
-    width: 32,
-    height: 32,
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  proButton: {
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  menuDots: {
-    fontSize: 20,
-    color: colors.text,
+  themeToggleButton: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   // Gauge Card
   gaugeCard: {
-    backgroundColor: colors.card,
     marginHorizontal: spacing.md,
     borderRadius: 24,
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.md,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -328,7 +311,6 @@ const styles = StyleSheet.create({
   },
   drinkButton: {
     flex: 1,
-    backgroundColor: colors.accent,
     paddingVertical: spacing.md,
     borderRadius: 30,
     alignItems: 'center',
@@ -342,7 +324,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: colors.gaugeTrack,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -353,13 +334,11 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: colors.gaugeTrack,
     alignItems: 'center',
     justifyContent: 'center',
   },
   resetIconText: {
     fontSize: 22,
-    color: colors.textSecondary,
   },
 
   // History Section
@@ -376,11 +355,9 @@ const styles = StyleSheet.create({
   historyTitle: {
     fontSize: fontSize.lg,
     fontWeight: '600',
-    color: colors.text,
   },
   viewAllText: {
     fontSize: fontSize.sm,
-    color: colors.accent,
     fontWeight: '500',
   },
   emptyHistory: {
@@ -388,7 +365,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: colors.textSecondary,
     fontSize: fontSize.base,
   },
 
@@ -396,10 +372,10 @@ const styles = StyleSheet.create({
   historyItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
     borderRadius: 16,
     padding: spacing.md,
     marginBottom: spacing.sm,
+    borderWidth: 1,
   },
   historyIcon: {
     width: 44,
@@ -418,17 +394,14 @@ const styles = StyleSheet.create({
   historyDrinkName: {
     fontSize: fontSize.base,
     fontWeight: '500',
-    color: colors.text,
   },
   historyTime: {
     fontSize: fontSize.xs,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   historyAmount: {
     fontSize: fontSize.base,
     fontWeight: '600',
-    color: colors.text,
     marginRight: spacing.sm,
   },
   historyMenu: {
@@ -436,30 +409,5 @@ const styles = StyleSheet.create({
   },
   historyMenuDots: {
     fontSize: 16,
-    color: colors.textSecondary,
-  },
-
-  // Bottom Navigation
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    paddingVertical: spacing.sm,
-    paddingBottom: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.xs,
-    gap: 4,
-  },
-  navLabel: {
-    fontSize: 10,
-    color: colors.textSecondary,
-  },
-  navLabelActive: {
-    color: colors.accent,
-    fontWeight: '500',
   },
 });
