@@ -17,7 +17,13 @@
   },
   "submit": {
     "production": {
-      "ios": {}
+      "ios": {
+        "ascAppId": "6756275138",
+        "appleId": "akaminski23@me.com",
+        "ascApiKeyPath": "/Users/adamkaminski/Downloads/AuthKey_32VYZ6RQ9Z.p8",
+        "ascApiKeyIssuerId": "07aae45e-5b4d-492f-b9e8-1333f0fc7a58",
+        "ascApiKeyId": "32VYZ6RQ9Z"
+      }
     }
   }
 }

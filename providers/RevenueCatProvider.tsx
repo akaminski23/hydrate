@@ -10,7 +10,7 @@ import Purchases, {
 
 // RevenueCat Configuration
 const REVENUECAT_API_KEY = 'appl_kiuJtecukGTYJYdEhvRDRNtiSTN';
-const ENTITLEMENT_ID = 'Sip Pro';
+const ENTITLEMENT_ID = 'Pro';
 
 // Types
 interface RevenueCatContextType {

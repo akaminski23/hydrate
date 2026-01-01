@@ -1,111 +1,71 @@
-# Privacy Policy
+# Privacy Policy for Sip - Hydration Tracker
 
-**Sip - Water Tracker**
-**Last Updated: December 17, 2025**
+**Last Updated: January 1, 2026**
 
-Kaminski Performance ("we", "our", or "us") operates the Sip - Water Tracker mobile application (the "App"). This Privacy Policy explains how we collect, use, and protect your information when you use our App.
+## Introduction
 
----
+Sip ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our mobile application.
 
 ## Information We Collect
 
-### Data Stored Locally on Your Device
+### Data You Provide
+- **Hydration Data**: Water intake amounts, drink types, and timestamps you log
+- **Preferences**: Daily goals, measurement units, reminder settings, and theme preferences
 
-The App stores the following information **locally on your device only**:
+### Automatically Collected Data
+- **Device Information**: Device type, operating system version, and app version for crash reporting and compatibility
+- **Usage Analytics**: Anonymous app usage patterns to improve the user experience
 
-- **Hydration Data**: Your daily water intake records, drink history, and hydration goals
-- **App Preferences**: Your selected settings such as measurement units, notification preferences, and theme settings
-- **Notification Schedules**: Your configured reminder times for hydration notifications
+### What We Do NOT Collect
+- Personal identification (name, email, phone)
+- Location data
+- Health data from HealthKit (unless you explicitly enable integration)
+- Photos or camera access
+- Contacts
 
-**This data never leaves your device** and is not transmitted to our servers or any third parties.
+## How We Use Your Information
 
-### Information Collected by Third-Party Services
-
-When you make a purchase through the App, the following third-party services process your transaction:
-
-- **Apple App Store**: Handles all payment processing. We do not have access to your payment details (credit card numbers, billing address, etc.)
-- **RevenueCat**: Our subscription management service that helps us verify your purchase status. RevenueCat receives anonymized purchase data from Apple to manage your subscription. [RevenueCat Privacy Policy](https://www.revenuecat.com/privacy)
-
----
-
-## How We Use Information
-
-We use the locally stored information to:
-
-- Track and display your daily water intake
-- Send you local reminder notifications (if enabled)
-- Save your app preferences and settings
-- Display your hydration history and statistics
-
-We **do not**:
-
-- Collect or store any personal information (name, email, phone number)
-- Track your location
-- Use analytics or advertising services
-- Share any data with third parties for marketing purposes
-
----
+- **Provide Core Features**: Track your hydration, send reminders, display history
+- **Improve the App**: Analyze anonymous usage patterns to enhance features
+- **Process Purchases**: Handle in-app purchases through Apple's secure payment system
 
 ## Data Storage
 
-All your hydration data and app settings are stored **locally on your device** using secure storage mechanisms provided by the iOS operating system.
-
-- Your data is only accessible by the Sip app
-- Your data is included in your device backups (iCloud/iTunes) according to your backup settings
-- Uninstalling the app will permanently delete all locally stored data
-
----
+- **Local Storage**: Your hydration data is stored locally on your device
+- **iCloud Sync** (Pro): If enabled, data syncs securely via Apple's iCloud
+- **No Third-Party Servers**: We do not store your personal data on external servers
 
 ## Third-Party Services
 
-### Apple App Store
+We use the following services:
 
-All purchases are processed through Apple's App Store. Apple's privacy practices are governed by their own privacy policy: [Apple Privacy Policy](https://www.apple.com/legal/privacy/)
-
-### RevenueCat
-
-We use RevenueCat to manage subscriptions and verify purchases. RevenueCat processes:
-
-- Anonymous user identifiers
-- Purchase receipts from Apple
-- Subscription status information
-
-RevenueCat does not receive any personal information from us. [RevenueCat Privacy Policy](https://www.revenuecat.com/privacy)
-
----
+- **RevenueCat**: For subscription management (processes purchase data securely)
+- **Apple Analytics**: For anonymous crash reports and app performance metrics
+- **Apple Push Notifications**: For hydration reminders (optional)
 
 ## Your Rights
 
-You have the following rights regarding your data:
-
-- **Access**: All your data is stored locally and accessible within the App
-- **Deletion**: You can delete all your data by uninstalling the App or clearing app data in iOS Settings
-- **Export**: You can view your hydration history within the App
-
-Since we do not collect or store any personal data on our servers, there is no data for us to delete or provide upon request.
-
----
+You can:
+- **Delete Data**: Reset your data at any time in Settings
+- **Disable Notifications**: Turn off reminders in Settings or iOS Settings
+- **Cancel Subscriptions**: Manage subscriptions through your Apple ID
 
 ## Children's Privacy
 
-Our App does not knowingly collect any personal information from children under 13. The App stores data locally and does not transmit any information to external servers.
+Sip is not directed at children under 13. We do not knowingly collect personal information from children.
 
----
+## Changes to This Policy
 
-## Changes to This Privacy Policy
-
-We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.
-
----
+We may update this Privacy Policy. Changes will be posted here with an updated date.
 
 ## Contact Us
 
-If you have any questions about this Privacy Policy, please contact us:
+If you have questions about this Privacy Policy:
 
 **Email**: 23adamkaminski@gmail.com
-
-**Developer**: Adam Kaminski / Kaminski Performance
+**Developer**: Adam Kaminski
+**Location**: Hawaii, USA
 
 ---
 
-*This privacy policy is effective as of December 17, 2025.*
+*This policy is effective as of January 1, 2026.*
