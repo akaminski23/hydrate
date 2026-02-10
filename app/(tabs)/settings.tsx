@@ -127,8 +127,8 @@ export default function SettingsScreen() {
 
   const handleResetToday = () => {
     Alert.alert(
-      'Reset Today',
-      'Are you sure you want to reset today\'s progress?',
+      "Reset Today's Progress?",
+      "This will set today's hydration to 0ml",
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -376,7 +376,8 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        {/* Reset Today */}
+        {/* Data Section */}
+        <Text style={[styles.sectionHeader, { color: theme.textSecondary }]}>Data</Text>
         <TouchableOpacity
           style={[styles.resetCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}
           onPress={handleResetToday}
@@ -585,11 +586,21 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
+  // Section Header
+  sectionHeader: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
+  },
+
   // Reset Card
   resetCard: {
     borderRadius: 16,
     padding: spacing.lg,
-    marginTop: spacing.md,
     alignItems: 'center',
     borderWidth: 1,
   },

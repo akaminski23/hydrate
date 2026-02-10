@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,90 +11,101 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/providers/ThemeContext';
 import { useRevenueCat } from '@/providers/RevenueCatProvider';
-import { drinkColors, DrinkType } from '@/constants/colors';
+import { DrinkConfig, getFreeDrinks, getProDrinks } from '@/constants/drinks';
 import { spacing, fontSize } from '@/constants/spacing';
-import { useHydrateStore, Drink, ML_TO_OZ } from '@/store/useHydrateStore';
+import { useHydrateStore } from '@/store/useHydrateStore';
 import { HydrationCounter } from '@/components/HydrationCounter';
-import { AddDrinkModal } from '@/components/AddDrinkModal';
+import { QuickAddButton } from '@/components/QuickAddButton';
+import { UndoToast } from '@/components/UndoToast';
 
-// Drink options
-const DRINK_OPTIONS = [
-  { type: 'water' as DrinkType, icon: '💧', label: 'Water' },
-  { type: 'coffee' as DrinkType, icon: '☕', label: 'Coffee' },
-  { type: 'tea' as DrinkType, icon: '🍵', label: 'Tea' },
-  { type: 'juice' as DrinkType, icon: '🧃', label: 'Juice' },
-];
+// Quick add amount (250ml)
+const QUICK_ADD_AMOUNT = 250;
 
-// Format time for history
-const formatTime = (timestamp: number): string => {
-  const date = new Date(timestamp);
-  const hours = date.getHours();
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  const displayHours = hours % 12 || 12;
-  return `${displayHours}:${minutes} ${ampm}`;
-};
-
-// Get drink info by type
-const getDrinkInfo = (type: DrinkType) => {
-  return DRINK_OPTIONS.find((d) => d.type === type) || DRINK_OPTIONS[0];
-};
+// PRO drinks to show (only 3 most relevant for recovery)
+const VISIBLE_PRO_DRINKS: string[] = ['collagen', 'electrolytes', 'protein'];
 
 export default function HomeScreen() {
   const router = useRouter();
   const { theme, isDark, toggleTheme } = useTheme();
   const { isPro } = useRevenueCat();
-  const { dailyGoal, addDrink, getTotalMl, getPercentage, getTodayDrinks, reset, unit } =
-    useHydrateStore();
+  const {
+    dailyGoal,
+    addDrink,
+    removeDrink,
+    getTotalMl,
+    getPercentage,
+    getDailySummary,
+    getLastDrinkId,
+    unit,
+  } = useHydrateStore();
 
   const totalMl = getTotalMl();
   const percentage = getPercentage();
-  const todayDrinks = getTodayDrinks();
+  const { summary } = getDailySummary();
 
-  // Quick add amount based on unit (250ml or ~8.5oz)
-  const quickAddAmount = unit === 'oz' ? 251 : 250; // 251ml ≈ 8.5oz
+  // Quick add label based on unit
   const quickAddLabel = unit === 'oz' ? '8.5 oz' : '250 ml';
 
-  // Modal state
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedDrink, setSelectedDrink] = useState<{
-    type: DrinkType;
-    icon: string;
-    label: string;
-    color: string;
-  } | null>(null);
+  // Toast state
+  const [toastVisible, setToastVisible] = useState(false);
+  const [lastAddedDrink, setLastAddedDrink] = useState<{ id: string; label: string } | null>(null);
 
-  // Quick add water
-  const handleQuickAdd = () => {
-    addDrink('water', quickAddAmount);
-  };
+  // Get drinks
+  const freeDrinks = getFreeDrinks();
+  const proDrinks = getProDrinks().filter((d) => VISIBLE_PRO_DRINKS.includes(d.type));
 
-  const handleSelectDrink = (type: DrinkType) => {
-    const drinkInfo = getDrinkInfo(type);
-    setSelectedDrink({
-      type,
-      icon: drinkInfo.icon,
-      label: drinkInfo.label,
-      color: drinkColors[type],
-    });
-    setModalVisible(true);
-  };
-
-  const handleAddDrink = (amount: number) => {
-    if (selectedDrink) {
-      addDrink(selectedDrink.type, amount);
+  // Quick add water (main button)
+  const handleQuickAddWater = useCallback(() => {
+    addDrink('water', QUICK_ADD_AMOUNT);
+    const lastId = getLastDrinkId();
+    if (lastId) {
+      const amountLabel = unit === 'oz' ? '8.5oz' : '250ml';
+      setLastAddedDrink({ id: lastId, label: `${amountLabel} Water` });
+      setToastVisible(true);
     }
-    setModalVisible(false);
-    setSelectedDrink(null);
-  };
+  }, [addDrink, getLastDrinkId, unit]);
 
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    setSelectedDrink(null);
-  };
+  // Handle tap on drink button (quick add 250ml)
+  const handleDrinkTap = useCallback((drink: DrinkConfig) => {
+    if (drink.isPro && !isPro) {
+      router.push('/paywall');
+      return;
+    }
+    addDrink(drink.type, QUICK_ADD_AMOUNT);
+    const lastId = getLastDrinkId();
+    if (lastId) {
+      const amountLabel = unit === 'oz' ? '8.5oz' : '250ml';
+      setLastAddedDrink({ id: lastId, label: `${amountLabel} ${drink.label}` });
+      setToastVisible(true);
+    }
+  }, [addDrink, getLastDrinkId, isPro, router, unit]);
 
-  // Get last 3 drinks for history preview (today only)
-  const recentDrinks = [...todayDrinks].reverse().slice(0, 3);
+  // Handle long press (open custom amount modal as route)
+  const handleDrinkLongPress = useCallback((drink: DrinkConfig) => {
+    if (drink.isPro && !isPro) {
+      router.push('/paywall');
+      return;
+    }
+    router.push({
+      pathname: '/modal/custom-amount',
+      params: { drinkType: drink.type },
+    });
+  }, [isPro, router]);
+
+  // Handle undo
+  const handleUndo = useCallback(() => {
+    if (lastAddedDrink) {
+      removeDrink(lastAddedDrink.id);
+    }
+    setToastVisible(false);
+    setLastAddedDrink(null);
+  }, [lastAddedDrink, removeDrink]);
+
+  // Dismiss toast
+  const handleDismissToast = useCallback(() => {
+    setToastVisible(false);
+    setLastAddedDrink(null);
+  }, []);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
@@ -106,9 +117,9 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerIcon}>
-            <Text style={styles.headerIconText}>💧</Text>
+            <Ionicons name="water" size={24} color={theme.accent} />
           </View>
-          <Text style={[styles.headerTitle, { color: theme.text }]}>Home</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>Hydration</Text>
           <View style={styles.headerActions}>
             {!isPro && (
               <TouchableOpacity
@@ -136,103 +147,82 @@ export default function HomeScreen() {
             goal={dailyGoal}
           />
 
-          {/* Action Buttons */}
+          {/* Main Drink Button */}
           <View style={styles.actionRow}>
             <TouchableOpacity
-              style={[styles.resetIconButton, { backgroundColor: 'transparent', borderColor: theme.accent, borderWidth: 2 }]}
-              onPress={reset}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.resetIconText, { color: theme.accent }]}>↺</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
               style={[styles.drinkButton, { backgroundColor: theme.accent }]}
-              onPress={handleQuickAdd}
+              onPress={handleQuickAddWater}
               activeOpacity={0.8}
             >
               <Text style={styles.drinkButtonText}>Drink ({quickAddLabel})</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.glassButton, { backgroundColor: 'transparent', borderColor: theme.accent, borderWidth: 2 }]}
-              onPress={() => handleSelectDrink('water')}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.glassIcon}>💧</Text>
-            </TouchableOpacity>
           </View>
         </View>
 
-        {/* History Section */}
-        <View style={styles.historySection}>
-          <View style={styles.historyHeader}>
-            <Text style={[styles.historyTitle, { color: theme.text }]}>History</Text>
-            <TouchableOpacity onPress={() => router.push('/history')}>
-              <Text style={[styles.viewAllText, { color: theme.accent }]}>View All →</Text>
-            </TouchableOpacity>
+        {/* Quick Add Section */}
+        <View style={styles.quickAddSection}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>Quick Add</Text>
+
+          {/* FREE Drinks Grid (2x2) */}
+          <View style={styles.drinksGrid}>
+            {freeDrinks.map((drink) => (
+              <QuickAddButton
+                key={drink.type}
+                icon={drink.icon}
+                label={drink.label}
+                color={drink.color}
+                isLocked={false}
+                onPress={() => handleDrinkTap(drink)}
+                onLongPress={() => handleDrinkLongPress(drink)}
+              />
+            ))}
           </View>
 
-          {recentDrinks.length === 0 ? (
-            <View style={styles.emptyHistory}>
-              <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-                No drinks yet today
-              </Text>
+          {/* Hint text */}
+          <Text style={styles.hintText}>Long press for custom amount</Text>
+
+          {/* PRO Drinks Row */}
+          <View style={styles.proDrinksRow}>
+            <View style={styles.proLabel}>
+              <Ionicons name="diamond-outline" size={14} color={theme.premium} />
+              <Text style={[styles.proLabelText, { color: theme.textSecondary }]}>PRO</Text>
             </View>
-          ) : (
-            recentDrinks.map((drink) => (
-              <HistoryItem key={drink.id} drink={drink} theme={theme} />
-            ))
-          )}
+            <View style={styles.proDrinksContainer}>
+              {proDrinks.map((drink) => (
+                <QuickAddButton
+                  key={drink.type}
+                  icon={drink.icon}
+                  label={drink.label}
+                  color={drink.color}
+                  isLocked={!isPro}
+                  onPress={() => handleDrinkTap(drink)}
+                  onLongPress={() => handleDrinkLongPress(drink)}
+                />
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* Daily Summary */}
+        <View style={styles.summarySection}>
+          <View style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+            <Ionicons name="sunny-outline" size={20} color={theme.accent} />
+            <Text style={[styles.summaryText, { color: theme.textSecondary }]}>
+              {summary}
+            </Text>
+          </View>
         </View>
 
       </ScrollView>
 
-      {/* Add Drink Modal */}
-      <AddDrinkModal
-        visible={modalVisible}
-        drinkType={selectedDrink?.type || null}
-        drinkIcon={selectedDrink?.icon || ''}
-        drinkLabel={selectedDrink?.label || ''}
-        drinkColor={selectedDrink?.color || theme.accent}
-        onAdd={handleAddDrink}
-        onClose={handleCloseModal}
+      {/* Undo Toast */}
+      <UndoToast
+        visible={toastVisible}
+        message={lastAddedDrink ? `Added ${lastAddedDrink.label}` : ''}
+        onUndo={handleUndo}
+        onDismiss={handleDismissToast}
       />
     </SafeAreaView>
-  );
-}
-
-// History Item Component
-function HistoryItem({ drink, theme }: { drink: Drink; theme: any }) {
-  const drinkInfo = getDrinkInfo(drink.type);
-  const { unit } = useHydrateStore();
-
-  // Format amount based on unit
-  const displayAmount = unit === 'oz'
-    ? `${Math.round(drink.amount * ML_TO_OZ * 10) / 10} oz`
-    : `${drink.amount} ml`;
-
-  return (
-    <View style={[styles.historyItem, { backgroundColor: theme.cardAlt, borderColor: theme.cardBorder }]}>
-      <View
-        style={[
-          styles.historyIcon,
-          { backgroundColor: drinkColors[drink.type] + '20' },
-        ]}
-      >
-        <Text style={styles.historyIconText}>{drinkInfo.icon}</Text>
-      </View>
-      <View style={styles.historyInfo}>
-        <Text style={[styles.historyDrinkName, { color: theme.text }]}>{drinkInfo.label}</Text>
-        <Text style={[styles.historyTime, { color: theme.textSecondary }]}>
-          {formatTime(drink.timestamp)}
-        </Text>
-      </View>
-      <Text style={[styles.historyAmount, { color: theme.text }]}>{displayAmount}</Text>
-      <TouchableOpacity style={styles.historyMenu}>
-        <Text style={[styles.historyMenuDots, { color: theme.textSecondary }]}>⋮</Text>
-      </TouchableOpacity>
-    </View>
   );
 }
 
@@ -244,7 +234,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing.xl,
   },
 
   // Header
@@ -260,9 +250,6 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerIconText: {
-    fontSize: 20,
   },
   headerTitle: {
     fontSize: fontSize.lg,
@@ -300,14 +287,13 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  // Action Row
+  // Action Row (Drink button only)
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
     marginTop: spacing.md,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.lg,
   },
   drinkButton: {
     flex: 1,
@@ -320,94 +306,66 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
     fontWeight: '600',
   },
-  glassButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  glassIcon: {
-    fontSize: 22,
-  },
-  resetIconButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  resetIconText: {
-    fontSize: 22,
-  },
 
-  // History Section
-  historySection: {
+  // Quick Add Section
+  quickAddSection: {
     marginTop: spacing.xl,
     paddingHorizontal: spacing.lg,
   },
-  historyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  historyTitle: {
+  sectionTitle: {
     fontSize: fontSize.lg,
     fontWeight: '600',
+    marginBottom: spacing.md,
   },
-  viewAllText: {
-    fontSize: fontSize.sm,
-    fontWeight: '500',
+  drinksGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
   },
-  emptyHistory: {
-    paddingVertical: spacing.xl,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: fontSize.base,
+  hintText: {
+    fontSize: 12,
+    color: '#8E8E93', // iOS secondary label
+    textAlign: 'center',
+    marginTop: spacing.sm,
   },
 
-  // History Item
-  historyItem: {
+  // PRO Drinks Row
+  proDrinksRow: {
+    marginTop: spacing.lg,
+  },
+  proLabel: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
-    padding: spacing.md,
+    gap: spacing.xs,
     marginBottom: spacing.sm,
+  },
+  proLabelText: {
+    fontSize: fontSize.xs,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  proDrinksContainer: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+
+  // Daily Summary
+  summarySection: {
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.lg,
+  },
+  summaryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: 16,
     borderWidth: 1,
   },
-  historyIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  historyIconText: {
-    fontSize: 20,
-  },
-  historyInfo: {
+  summaryText: {
     flex: 1,
-    marginLeft: spacing.md,
-  },
-  historyDrinkName: {
-    fontSize: fontSize.base,
-    fontWeight: '500',
-  },
-  historyTime: {
-    fontSize: fontSize.xs,
-    marginTop: 2,
-  },
-  historyAmount: {
-    fontSize: fontSize.base,
-    fontWeight: '600',
-    marginRight: spacing.sm,
-  },
-  historyMenu: {
-    padding: spacing.xs,
-  },
-  historyMenuDots: {
-    fontSize: 16,
+    fontSize: fontSize.sm,
   },
 });

@@ -10,8 +10,10 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/providers/ThemeContext';
-import { drinkColors, DrinkType } from '@/constants/colors';
+import { getDrinkByType } from '@/constants/drinks';
 import { spacing, fontSize } from '@/constants/spacing';
 import { useHydrateStore, Drink, ML_TO_OZ } from '@/store/useHydrateStore';
 
@@ -19,19 +21,6 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 const DELETE_THRESHOLD = -80;
 
 type FilterType = 'today' | 'week' | 'month';
-
-// Drink options
-const DRINK_OPTIONS = [
-  { type: 'water' as DrinkType, icon: '💧', label: 'Water' },
-  { type: 'coffee' as DrinkType, icon: '☕', label: 'Coffee' },
-  { type: 'tea' as DrinkType, icon: '🍵', label: 'Tea' },
-  { type: 'juice' as DrinkType, icon: '🧃', label: 'Juice' },
-];
-
-// Get drink info by type
-const getDrinkInfo = (type: DrinkType) => {
-  return DRINK_OPTIONS.find((d) => d.type === type) || DRINK_OPTIONS[0];
-};
 
 // Format time
 const formatTime = (timestamp: number): string => {
@@ -238,8 +227,13 @@ function SwipeableHistoryItem({
   onDelete: () => void;
   theme: any;
 }) {
-  const drinkInfo = getDrinkInfo(drink.type);
+  const drinkConfig = getDrinkByType(drink.type);
   const translateX = useRef(new Animated.Value(0)).current;
+
+  // Fallback for unknown drink types
+  const icon = drinkConfig?.icon || 'water-outline';
+  const label = drinkConfig?.label || 'Water';
+  const color = drinkConfig?.color || '#4A9BD9';
 
   const panResponder = useRef(
     PanResponder.create({
@@ -253,6 +247,7 @@ function SwipeableHistoryItem({
       },
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dx < DELETE_THRESHOLD) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           Animated.timing(translateX, {
             toValue: -SCREEN_WIDTH,
             duration: 200,
@@ -283,14 +278,14 @@ function SwipeableHistoryItem({
         <View
           style={[
             styles.historyIcon,
-            { backgroundColor: drinkColors[drink.type] + '20' },
+            { backgroundColor: color + '20' },
           ]}
         >
-          <Text style={styles.historyIconText}>{drinkInfo.icon}</Text>
+          <Ionicons name={icon as any} size={20} color={color} />
         </View>
         <View style={styles.historyInfo}>
           <Text style={[styles.historyDrinkName, { color: theme.text }]}>
-            {drinkInfo.label} • {formatTime(drink.timestamp)}
+            {label} • {formatTime(drink.timestamp)}
           </Text>
         </View>
         <Text style={[styles.historyAmount, { color: theme.text }]}>

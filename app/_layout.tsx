@@ -70,7 +70,17 @@ function AppContent() {
           headerShown: false,
           contentStyle: { backgroundColor: theme.background },
         }}
-      />
+      >
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="paywall" />
+        <Stack.Screen
+          name="modal/custom-amount"
+          options={{
+            presentation: 'modal',
+            headerShown: false,
+          }}
+        />
+      </Stack>
     </>
   );
 }

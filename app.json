@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Hydrate",
+    "name": "Sip",
     "slug": "hydrate",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,11 +17,10 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.adamkaminski.hydrate",
       "infoPlist": {
-        "NSUserTrackingUsageDescription": "This allows us to improve your experience with personalized content.",
         "NSNotificationUsageDescription": "We send reminders to help you stay hydrated throughout the day.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "7"
+      "buildNumber": "11"
     },
     "android": {
       "adaptiveIcon": {

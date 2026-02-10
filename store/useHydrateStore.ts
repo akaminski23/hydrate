@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DrinkType } from '@/constants/colors';
+import { DrinkType } from '@/constants/drinks';
 
 // Helper: get today's date as YYYY-MM-DD
 const getTodayDate = (): string => {
@@ -56,6 +56,10 @@ interface HydrateState {
   // Helpers for unit conversion
   formatAmount: (ml: number) => string;
   formatGoal: () => string;
+
+  // Daily summary
+  getDailySummary: () => { totalDrinks: number; totalMl: number; summary: string };
+  getLastDrinkId: () => string | null;
 }
 
 export const useHydrateStore = create<HydrateState>()(
@@ -166,6 +170,37 @@ export const useHydrateStore = create<HydrateState>()(
           return `/${oz} oz`;
         }
         return `/${dailyGoal} ml`;
+      },
+
+      getDailySummary: () => {
+        const todayDrinks = get().getTodayDrinks();
+        const totalDrinks = todayDrinks.length;
+        const totalMl = todayDrinks.reduce((sum, drink) => sum + drink.amount, 0);
+        const { unit, dailyGoal } = get();
+
+        // Format summary text
+        let summary = '';
+        if (totalDrinks === 0) {
+          summary = 'Start your day with a glass of water';
+        } else {
+          const remaining = Math.max(0, dailyGoal - totalMl);
+          if (remaining === 0) {
+            summary = 'Goal reached! Great job staying hydrated';
+          } else {
+            const remainingFormatted = unit === 'oz'
+              ? `${Math.round(remaining * ML_TO_OZ)} oz`
+              : `${remaining} ml`;
+            summary = `${remainingFormatted} to go. Keep it up!`;
+          }
+        }
+
+        return { totalDrinks, totalMl, summary };
+      },
+
+      getLastDrinkId: () => {
+        const todayDrinks = get().getTodayDrinks();
+        if (todayDrinks.length === 0) return null;
+        return todayDrinks[todayDrinks.length - 1].id;
       },
     }),
     {
